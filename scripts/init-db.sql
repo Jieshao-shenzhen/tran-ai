@@ -1,0 +1,94 @@
+CREATE DATABASE IF NOT EXISTS lab_user DEFAULT CHARACTER SET utf8mb4;
+CREATE DATABASE IF NOT EXISTS lab_resource DEFAULT CHARACTER SET utf8mb4;
+CREATE DATABASE IF NOT EXISTS lab_business DEFAULT CHARACTER SET utf8mb4;
+CREATE DATABASE IF NOT EXISTS lab_report DEFAULT CHARACTER SET utf8mb4;
+
+USE lab_user;
+CREATE TABLE sys_user (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(64) NOT NULL UNIQUE,
+  password VARCHAR(100) NOT NULL,
+  real_name VARCHAR(64) NOT NULL,
+  employee_no VARCHAR(32),
+  phone VARCHAR(20),
+  dept VARCHAR(64),
+  role VARCHAR(32) NOT NULL,
+  status TINYINT DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE sys_role (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  code VARCHAR(32) NOT NULL UNIQUE,
+  name VARCHAR(64) NOT NULL
+);
+CREATE TABLE sys_user_role (
+  user_id BIGINT NOT NULL,
+  role_id BIGINT NOT NULL,
+  PRIMARY KEY (user_id, role_id)
+);
+CREATE TABLE sys_menu (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  path VARCHAR(128), name VARCHAR(64), title VARCHAR(64),
+  icon VARCHAR(64), parent_id BIGINT DEFAULT 0, sort INT DEFAULT 0
+);
+CREATE TABLE sys_role_menu (
+  role_id BIGINT NOT NULL, menu_id BIGINT NOT NULL,
+  PRIMARY KEY (role_id, menu_id)
+);
+CREATE TABLE sys_operation_log (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT, username VARCHAR(64), action VARCHAR(128),
+  detail VARCHAR(512), created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+USE lab_resource;
+CREATE TABLE lab_room (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  code VARCHAR(32) NOT NULL UNIQUE, name VARCHAR(128) NOT NULL,
+  building VARCHAR(64), floor INT, capacity INT, type VARCHAR(32),
+  manager_id BIGINT, status TINYINT DEFAULT 1, remark VARCHAR(255)
+);
+CREATE TABLE lab_device (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  code VARCHAR(32) NOT NULL UNIQUE, name VARCHAR(128) NOT NULL,
+  category VARCHAR(32), room_id BIGINT, brand VARCHAR(64),
+  model_no VARCHAR(64), status TINYINT DEFAULT 1,
+  buy_date DATE, price DECIMAL(10,2)
+);
+CREATE TABLE material (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  code VARCHAR(32) NOT NULL UNIQUE, name VARCHAR(128) NOT NULL,
+  spec VARCHAR(64), unit VARCHAR(16), stock INT DEFAULT 0,
+  warn_threshold INT DEFAULT 0
+);
+CREATE TABLE material_record (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  material_id BIGINT NOT NULL, type VARCHAR(16) NOT NULL,
+  quantity INT NOT NULL, operator_id BIGINT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+USE lab_business;
+CREATE TABLE reservation (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  room_id BIGINT NOT NULL, applicant_id BIGINT NOT NULL,
+  purpose VARCHAR(255), start_time DATETIME NOT NULL, end_time DATETIME NOT NULL,
+  people_num INT, status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
+  approver_id BIGINT, reject_reason VARCHAR(255), created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE repair_order (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  device_id BIGINT NOT NULL, room_id BIGINT NOT NULL, reporter_id BIGINT NOT NULL,
+  description VARCHAR(512) NOT NULL, status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
+  assignee_id BIGINT, result VARCHAR(512), completed_at DATETIME
+);
+
+USE lab_report;
+CREATE TABLE stat_daily_room_usage (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  stat_date DATE NOT NULL, room_id BIGINT, usage_count INT DEFAULT 0,
+  approved_count INT DEFAULT 0
+);
+CREATE TABLE stat_daily_repair (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  stat_date DATE NOT NULL, new_count INT DEFAULT 0, completed_count INT DEFAULT 0
+);
