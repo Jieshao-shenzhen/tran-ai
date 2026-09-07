@@ -1,0 +1,26 @@
+server:
+  port: 9300
+spring:
+  application:
+    name: lab-business-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/lab_business?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: ${MYSQL_PASSWORD:123456}
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+lab:
+  jwt:
+    secret: lab-secret-key-0123456789abcdef0123456789abcdef
+  mq:
+    exchange: lab.event.exchange
