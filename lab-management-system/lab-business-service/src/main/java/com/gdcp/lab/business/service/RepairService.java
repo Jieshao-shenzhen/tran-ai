@@ -51,6 +51,7 @@ public class RepairService {
         orderMapper.updateById(o);
         // 注意用 HashMap 避免 null value（orderId 在 insert 后已自增回填，但保险起见）
         Map<String, Object> msg = new HashMap<>();
+        msg.put("_routingKey", "lab.stats.repair.completed");
         msg.put("orderId", o.getId());
         msg.put("deviceId", o.getDeviceId());
         rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE, "lab.stats.repair.completed", msg);

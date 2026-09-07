@@ -107,6 +107,7 @@ public class ReservationService {
 
     private void publish(String routingKey, Reservation r, String status) {
         Map<String, Object> msg = new HashMap<>();
+        msg.put("_routingKey", routingKey);
         msg.put("reservationId", r.getId());
         msg.put("roomId", r.getRoomId());
         msg.put("status", status);
