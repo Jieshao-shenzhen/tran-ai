@@ -1,0 +1,30 @@
+server:
+  port: 9000
+spring:
+  application:
+    name: lab-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+    gateway:
+      routes:
+        - id: user-service
+          uri: lb://lab-user-service
+          predicates:
+            - Path=/api/v1/auth/**,/api/v1/users/**,/api/v1/logs/**
+        - id: resource-service
+          uri: lb://lab-resource-service
+          predicates:
+            - Path=/api/v1/rooms/**,/api/v1/devices/**,/api/v1/materials/**
+        - id: business-service
+          uri: lb://lab-business-service
+          predicates:
+            - Path=/api/v1/reservations/**,/api/v1/repairs/**
+        - id: report-service
+          uri: lb://lab-report-service
+          predicates:
+            - Path=/api/v1/stats/**
+lab:
+  jwt:
+    secret: lab-secret-key-0123456789abcdef0123456789abcdef
