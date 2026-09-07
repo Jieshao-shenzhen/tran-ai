@@ -10,6 +10,7 @@
     <module>lab-user-service</module>
     <module>lab-resource-service</module>
     <module>lab-business-service</module>
+    <module>lab-report-service</module>
   </modules>
   <parent>
     <groupId>org.springframework.boot</groupId>
