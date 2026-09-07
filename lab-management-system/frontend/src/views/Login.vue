@@ -69,7 +69,7 @@ async function handleLogin() {
   try {
     const { token } = await login(form.username, form.password)
     const info = await me()
-    store.setAuth(token, info.role, info.username)
+    store.setAuth(token, info.role, info.username, info.id)
     ElMessage.success('登录成功')
     router.push('/dashboard')
   } catch (e) {

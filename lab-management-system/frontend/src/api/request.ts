@@ -13,6 +13,7 @@ function clearAuthAndGoLogin() {
   localStorage.removeItem('token')
   localStorage.removeItem('role')
   localStorage.removeItem('username')
+  localStorage.removeItem('userId')
   router.push('/login')
 }
 
