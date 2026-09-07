@@ -2,12 +2,10 @@ package com.gdcp.lab.user.controller;
 
 import com.alibaba.excel.EasyExcel;
 import com.gdcp.lab.common.result.Result;
-import com.gdcp.lab.user.entity.OperationLog;
 import com.gdcp.lab.user.entity.SysUser;
 import com.gdcp.lab.user.excel.UserImportListener;
 import com.gdcp.lab.user.excel.UserImportRow;
 import com.gdcp.lab.user.mapper.SysUserMapper;
-import com.gdcp.lab.user.service.OperationLogService;
 import com.gdcp.lab.user.service.UserService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -22,22 +20,15 @@ import java.util.Map;
 public class UserController {
     private final UserService userService;
     private final SysUserMapper userMapper;
-    private final OperationLogService logService;
 
-    public UserController(UserService userService, SysUserMapper userMapper, OperationLogService logService) {
+    public UserController(UserService userService, SysUserMapper userMapper) {
         this.userService = userService;
         this.userMapper = userMapper;
-        this.logService = logService;
     }
 
     @GetMapping
     public Result<List<SysUser>> list(@RequestParam(required = false) String role) {
         return Result.ok(userService.list(role));
-    }
-
-    @GetMapping("/logs")
-    public Result<List<OperationLog>> logs() {
-        return Result.ok(logService.list());
     }
 
     @PostMapping
