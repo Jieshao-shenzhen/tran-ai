@@ -8,6 +8,7 @@
   <modules>
     <module>lab-common</module>
     <module>lab-user-service</module>
+    <module>lab-resource-service</module>
   </modules>
   <parent>
     <groupId>org.springframework.boot</groupId>
