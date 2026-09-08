@@ -47,9 +47,16 @@
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <template v-if="isAdmin">
-              <el-button v-if="row.status === 'PENDING'" size="small" type="primary" @click="openAssign(row)">派单</el-button>
-              <el-button v-if="row.status === 'PENDING'" size="small" type="danger" plain @click="handleReject(row)">驳回</el-button>
+            <template v-if="row.status === 'PENDING' && canFirstApprove">
+              <el-button size="small" type="success" @click="handleApprove(row)">通过</el-button>
+              <el-button size="small" type="danger" plain @click="handleReject(row)">驳回</el-button>
+            </template>
+            <template v-else-if="row.status === 'DIRECTOR_APPROVED' && canSecondApprove">
+              <el-button size="small" type="success" @click="handleApprove(row)">通过</el-button>
+              <el-button size="small" type="danger" plain @click="handleReject(row)">驳回</el-button>
+            </template>
+            <template v-else-if="isAdmin">
+              <el-button v-if="row.status === 'APPROVED'" size="small" type="primary" @click="openAssign(row)">派单</el-button>
               <el-button v-if="row.status === 'ASSIGNED'" size="small" type="success" @click="handleFinish(row)">完工</el-button>
               <el-button v-if="row.status === 'COMPLETED'" size="small" type="info" plain @click="handleVerify(row)">验收</el-button>
             </template>
@@ -89,6 +96,7 @@ import { listUsers } from '../api/user'
 import {
   listRepairs,
   createRepair,
+  approveRepair,
   assignRepair,
   rejectRepair,
   finishRepair,
@@ -120,7 +128,10 @@ interface RepairRow {
 }
 
 const store = useUserStore()
-const isAdmin = computed(() => ['LAB_ADMIN', 'SYSTEM_ADMIN'].includes(store.role))
+const role = computed(() => store.role)
+const isAdmin = computed(() => ['LAB_ADMIN', 'SYSTEM_ADMIN'].includes(role.value))
+const canFirstApprove = computed(() => ['DIRECTOR', 'SYSTEM_ADMIN'].includes(role.value))
+const canSecondApprove = computed(() => ['DEAN', 'SYSTEM_ADMIN'].includes(role.value))
 
 const formRef = ref<FormInstance>()
 const submitting = ref(false)
@@ -160,7 +171,9 @@ function fmtTime(t?: string) {
 }
 function statusText(s: string) {
   const map: Record<string, string> = {
-    PENDING: '待处理',
+    PENDING: '待主任审批',
+    DIRECTOR_APPROVED: '待院长审批',
+    APPROVED: '已批准待派单',
     ASSIGNED: '已派单',
     COMPLETED: '已完成',
     REJECTED: '已驳回',
@@ -171,6 +184,8 @@ function statusText(s: string) {
 function statusTag(s: string) {
   const map: Record<string, 'warning' | 'primary' | 'success' | 'danger' | 'info'> = {
     PENDING: 'warning',
+    DIRECTOR_APPROVED: 'warning',
+    APPROVED: 'success',
     ASSIGNED: 'primary',
     COMPLETED: 'success',
     REJECTED: 'danger',
@@ -240,6 +255,12 @@ async function handleAssign() {
   } finally {
     assigning.value = false
   }
+}
+
+async function handleApprove(row: RepairRow) {
+  await approveRepair(row.id)
+  ElMessage.success('已通过')
+  await load()
 }
 
 async function handleReject(row: RepairRow) {
