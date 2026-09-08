@@ -1,6 +1,7 @@
 package com.gdcp.lab.business.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.gdcp.lab.business.common.ApprovalRoleUtil;
 import com.gdcp.lab.business.config.RabbitConfig;
 import com.gdcp.lab.business.entity.Reservation;
 import com.gdcp.lab.business.mapper.ReservationMapper;
@@ -8,6 +9,7 @@ import com.gdcp.lab.common.exception.BizException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,18 +49,56 @@ public class ReservationService {
         return false;
     }
 
-    public void approve(Long id, Long approverId) {
-        Reservation r = mustPending(id);
-        r.setStatus("APPROVED");
-        r.setApproverId(approverId);
-        reservationMapper.updateById(r);
-        publish("lab.stats.reservation.approved", r, "APPROVED");
+    public void approve(Long id, Long approverId, String approverRole) {
+        Reservation r = reservationMapper.selectById(id);
+        if (r == null) {
+            throw new BizException("预约不存在");
+        }
+        if ("PENDING".equals(r.getStatus())) {
+            if (!ApprovalRoleUtil.canFirstApprove(approverRole)) {
+                throw new BizException("无权限审批");
+            }
+            r.setApproverId(approverId);
+            if (Duration.between(r.getStartTime(), r.getEndTime()).toHours() >= 24) {
+                r.setStatus("DIRECTOR_APPROVED");
+                reservationMapper.updateById(r);
+            } else {
+                r.setStatus("APPROVED");
+                reservationMapper.updateById(r);
+                publish("lab.stats.reservation.approved", r, "APPROVED");
+            }
+        } else if ("DIRECTOR_APPROVED".equals(r.getStatus())) {
+            if (!ApprovalRoleUtil.canSecondApprove(approverRole)) {
+                throw new BizException("无权限审批");
+            }
+            r.setSecondApproverId(approverId);
+            r.setStatus("APPROVED");
+            reservationMapper.updateById(r);
+            publish("lab.stats.reservation.approved", r, "APPROVED");
+        } else {
+            throw new BizException("当前状态不可审批");
+        }
     }
 
-    public void reject(Long id, Long approverId, String reason) {
-        Reservation r = mustPending(id);
+    public void reject(Long id, Long approverId, String approverRole, String reason) {
+        Reservation r = reservationMapper.selectById(id);
+        if (r == null) {
+            throw new BizException("预约不存在");
+        }
+        if ("PENDING".equals(r.getStatus())) {
+            if (!ApprovalRoleUtil.canFirstApprove(approverRole)) {
+                throw new BizException("无权限审批");
+            }
+            r.setApproverId(approverId);
+        } else if ("DIRECTOR_APPROVED".equals(r.getStatus())) {
+            if (!ApprovalRoleUtil.canSecondApprove(approverRole)) {
+                throw new BizException("无权限审批");
+            }
+            r.setSecondApproverId(approverId);
+        } else {
+            throw new BizException("当前状态不可审批");
+        }
         r.setStatus("REJECTED");
-        r.setApproverId(approverId);
         r.setRejectReason(reason);
         reservationMapper.updateById(r);
     }
@@ -92,17 +132,6 @@ public class ReservationService {
           .eq(status != null && !status.isEmpty(), Reservation::getStatus, status)
           .orderByDesc(Reservation::getCreatedAt);
         return reservationMapper.selectList(qw);
-    }
-
-    private Reservation mustPending(Long id) {
-        Reservation r = reservationMapper.selectById(id);
-        if (r == null) {
-            throw new BizException("预约不存在");
-        }
-        if (!"PENDING".equals(r.getStatus())) {
-            throw new BizException("当前状态不可审批");
-        }
-        return r;
     }
 
     private void publish(String routingKey, Reservation r, String status) {

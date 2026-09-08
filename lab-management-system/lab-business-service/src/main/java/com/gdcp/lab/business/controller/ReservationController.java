@@ -24,15 +24,17 @@ public class ReservationController {
 
     @PostMapping("/{id}/approve")
     public Result<Void> approve(@PathVariable Long id,
-            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
-        reservationService.approve(id, userId == null ? 0L : userId);
+            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        reservationService.approve(id, userId == null ? 0L : userId, userRole);
         return Result.ok(null);
     }
 
     @PostMapping("/{id}/reject")
     public Result<Void> reject(@PathVariable Long id, @RequestParam String reason,
-            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
-        reservationService.reject(id, userId == null ? 0L : userId, reason);
+            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        reservationService.reject(id, userId == null ? 0L : userId, userRole, reason);
         return Result.ok(null);
     }
 
