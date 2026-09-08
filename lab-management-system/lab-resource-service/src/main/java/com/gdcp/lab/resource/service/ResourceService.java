@@ -59,6 +59,32 @@ public class ResourceService {
         return materialMapper.selectList(qw);
     }
 
+    public Material createMaterial(Material m) {
+        if (m.getCode() == null || m.getCode().isBlank()) throw new BizException("编码不能为空");
+        if (m.getName() == null || m.getName().isBlank()) throw new BizException("名称不能为空");
+        LambdaQueryWrapper<Material> qw = new LambdaQueryWrapper<>();
+        qw.eq(Material::getCode, m.getCode());
+        if (materialMapper.selectCount(qw) > 0) {
+            throw new BizException("耗材编码已存在: " + m.getCode());
+        }
+        if (m.getStock() == null) m.setStock(0);
+        if (m.getWarnThreshold() == null) m.setWarnThreshold(0);
+        materialMapper.insert(m);
+        return m;
+    }
+
+    public void deleteMaterial(Long id) {
+        if (materialMapper.selectById(id) == null) {
+            throw new BizException("耗材不存在");
+        }
+        LambdaQueryWrapper<MaterialRecord> qw = new LambdaQueryWrapper<>();
+        qw.eq(MaterialRecord::getMaterialId, id);
+        if (recordMapper.selectCount(qw) > 0) {
+            throw new BizException("该耗材已有出入库记录，不可删除");
+        }
+        materialMapper.deleteById(id);
+    }
+
     @Transactional
     public void stock(Long materialId, String type, int quantity, Long operatorId) {
         if (quantity <= 0) throw new BizException("数量必须大于0");

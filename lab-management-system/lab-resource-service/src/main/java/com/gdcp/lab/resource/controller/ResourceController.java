@@ -45,6 +45,17 @@ public class ResourceController {
         return Result.ok(resourceService.listMaterials(keyword));
     }
 
+    @PostMapping("/materials")
+    public Result<Material> createMaterial(@RequestBody Material m) {
+        return Result.ok(resourceService.createMaterial(m));
+    }
+
+    @DeleteMapping("/materials/{id}")
+    public Result<Void> deleteMaterial(@PathVariable Long id) {
+        resourceService.deleteMaterial(id);
+        return Result.ok(null);
+    }
+
     @PostMapping("/materials/{id}/stock")
     public Result<Void> stock(@PathVariable Long id, @RequestParam String type,
                               @RequestParam int quantity, @RequestParam(required = false) Long operatorId) {
