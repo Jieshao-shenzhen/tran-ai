@@ -12,7 +12,7 @@ spring:
         - id: user-service
           uri: lb://lab-user-service
           predicates:
-            - Path=/api/v1/auth/**,/api/v1/users/**,/api/v1/logs/**
+            - Path=/api/v1/auth/**,/api/v1/users/**,/api/v1/logs/**,/api/v1/internal/**
         - id: resource-service
           uri: lb://lab-resource-service
           predicates:

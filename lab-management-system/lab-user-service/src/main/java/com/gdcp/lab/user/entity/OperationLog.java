@@ -15,5 +15,6 @@ public class OperationLog {
     private String username;
     private String action;
     private String detail;
+    private String ip;
     private LocalDateTime createdAt;
 }

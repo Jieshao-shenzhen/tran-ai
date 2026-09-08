@@ -14,9 +14,13 @@ public class OperationLogService {
     public OperationLogService(OperationLogMapper logMapper) { this.logMapper = logMapper; }
 
     public void record(Long userId, String username, String action, String detail) {
+        record(userId, username, action, detail, null);
+    }
+
+    public void record(Long userId, String username, String action, String detail, String ip) {
         OperationLog log = new OperationLog();
         log.setUserId(userId); log.setUsername(username);
-        log.setAction(action); log.setDetail(detail);
+        log.setAction(action); log.setDetail(detail); log.setIp(ip);
         logMapper.insert(log);
     }
 

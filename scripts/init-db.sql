@@ -38,7 +38,7 @@ CREATE TABLE sys_role_menu (
 CREATE TABLE sys_operation_log (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   user_id BIGINT, username VARCHAR(64), action VARCHAR(128),
-  detail VARCHAR(512), created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  detail VARCHAR(512), ip VARCHAR(64), created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 USE lab_resource;
