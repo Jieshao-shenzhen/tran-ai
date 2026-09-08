@@ -39,6 +39,23 @@
           </template>
         </el-table-column>
         <el-table-column prop="createdAt" label="创建时间" width="180" />
+        <el-table-column label="操作" width="150" fixed="right">
+          <template #default="{ row }">
+            <el-button
+              size="small"
+              :type="row.status === 1 ? 'warning' : 'success'"
+              plain
+              @click="handleToggleStatus(row)"
+            >{{ row.status === 1 ? '冻结' : '解冻' }}</el-button>
+            <el-button
+              size="small"
+              type="danger"
+              plain
+              :disabled="row.id === store.userId || row.role === 'SYSTEM_ADMIN'"
+              @click="handleDelete(row)"
+            >删除</el-button>
+          </template>
+        </el-table-column>
       </el-table>
     </el-card>
 
@@ -73,8 +90,9 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { ElMessage } from 'element-plus'
-import { createUser, importUsers, listUsers } from '../api/user'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { createUser, deleteUser, importUsers, listUsers, setUserStatus } from '../api/user'
+import { useUserStore } from '../store/user'
 
 interface SysUser {
   id: number
@@ -91,6 +109,7 @@ const keyword = ref('')
 const users = ref<SysUser[]>([])
 const dialogVisible = ref(false)
 const form = reactive({ username: '', realName: '', role: 'STUDENT' })
+const store = useUserStore()
 
 const roleTextMap: Record<string, string> = {
   SYSTEM_ADMIN: '系统管理员',
@@ -168,6 +187,28 @@ async function handleImport(uploadFile: any) {
   } catch {
     ElMessage.error('导入失败，请检查文件格式')
   }
+}
+
+async function handleToggleStatus(row: SysUser) {
+  const enabled = row.status !== 1
+  await setUserStatus(row.id, enabled)
+  ElMessage.success(enabled ? '已解冻' : '已冻结')
+  await load()
+}
+
+async function handleDelete(row: SysUser) {
+  try {
+    await ElMessageBox.confirm(
+      `确定删除用户「${row.realName || row.username}」吗？删除后不可恢复。`,
+      '提示',
+      { type: 'warning' }
+    )
+  } catch {
+    return
+  }
+  await deleteUser(row.id)
+  ElMessage.success('已删除')
+  await load()
 }
 
 onMounted(load)

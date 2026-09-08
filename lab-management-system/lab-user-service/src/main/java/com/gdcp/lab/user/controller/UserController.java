@@ -42,4 +42,19 @@ public class UserController {
         EasyExcel.read(file.getInputStream(), UserImportRow.class, listener).sheet().doRead();
         return Result.ok("导入完成，共 " + listener.getRows().size() + " 条");
     }
+
+    @PostMapping("/{id}/status")
+    public Result<Void> setStatus(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        boolean enabled = Boolean.TRUE.equals(body.get("enabled"));
+        userService.toggleStatus(id, enabled ? 1 : 0);
+        return Result.ok(null);
+    }
+
+    @DeleteMapping("/{id}")
+    public Result<Void> delete(@PathVariable Long id,
+            @RequestHeader(value = "X-User-Id", required = false) Long operatorId,
+            @RequestHeader(value = "X-User-Role", required = false) String operatorRole) {
+        userService.deleteUser(id, operatorId == null ? 0L : operatorId, operatorRole);
+        return Result.ok(null);
+    }
 }

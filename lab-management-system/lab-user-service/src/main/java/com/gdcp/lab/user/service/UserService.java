@@ -45,4 +45,12 @@ public class UserService {
         u.setStatus(status);
         userMapper.updateById(u);
     }
+
+    public void deleteUser(Long id, Long operatorId, String operatorRole) {
+        SysUser u = userMapper.selectById(id);
+        if (u == null) throw new BizException("用户不存在");
+        if (id.equals(operatorId)) throw new BizException("不能删除当前登录用户");
+        if ("SYSTEM_ADMIN".equals(u.getRole())) throw new BizException("不能删除系统管理员");
+        userMapper.deleteById(id);
+    }
 }

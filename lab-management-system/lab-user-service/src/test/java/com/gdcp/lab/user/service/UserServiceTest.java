@@ -43,4 +43,51 @@ class UserServiceTest {
         listener.saveData();
         Mockito.verify(mapper, Mockito.times(2)).insert(any(SysUser.class));
     }
+
+    @Test
+    void toggleStatus_freeze_sets0() {
+        SysUser u = new SysUser();
+        u.setId(1L); u.setStatus(1);
+        Mockito.when(mapper.selectById(1L)).thenReturn(u);
+        service.toggleStatus(1L, 0);
+        assertEquals(0, u.getStatus());
+        Mockito.verify(mapper).updateById(u);
+    }
+
+    @Test
+    void toggleStatus_userNotFound_throws() {
+        Mockito.when(mapper.selectById(99L)).thenReturn(null);
+        assertThrows(BizException.class, () -> service.toggleStatus(99L, 0));
+    }
+
+    @Test
+    void deleteUser_success() {
+        SysUser u = new SysUser();
+        u.setId(2L); u.setRole("TEACHER");
+        Mockito.when(mapper.selectById(2L)).thenReturn(u);
+        service.deleteUser(2L, 1L, "SYSTEM_ADMIN");
+        Mockito.verify(mapper).deleteById(2L);
+    }
+
+    @Test
+    void deleteUser_notFound_throws() {
+        Mockito.when(mapper.selectById(99L)).thenReturn(null);
+        assertThrows(BizException.class, () -> service.deleteUser(99L, 1L, "SYSTEM_ADMIN"));
+    }
+
+    @Test
+    void deleteUser_self_throws() {
+        SysUser u = new SysUser();
+        u.setId(1L); u.setRole("TEACHER");
+        Mockito.when(mapper.selectById(1L)).thenReturn(u);
+        assertThrows(BizException.class, () -> service.deleteUser(1L, 1L, "SYSTEM_ADMIN"));
+    }
+
+    @Test
+    void deleteUser_systemAdmin_throws() {
+        SysUser u = new SysUser();
+        u.setId(2L); u.setRole("SYSTEM_ADMIN");
+        Mockito.when(mapper.selectById(2L)).thenReturn(u);
+        assertThrows(BizException.class, () -> service.deleteUser(2L, 1L, "SYSTEM_ADMIN"));
+    }
 }
