@@ -7,6 +7,6 @@ import org.apache.ibatis.annotations.Select;
 import java.util.List;
 
 public interface ReservationMapper extends BaseMapper<Reservation> {
-    @Select("SELECT * FROM reservation WHERE room_id = #{roomId} AND status IN ('PENDING','APPROVED')")
+    @Select("SELECT * FROM reservation WHERE room_id = #{roomId} AND status IN ('PENDING','DIRECTOR_APPROVED','APPROVED')")
     List<Reservation> findActiveByRoom(Long roomId);
 }

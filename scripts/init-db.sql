@@ -73,12 +73,15 @@ CREATE TABLE reservation (
   room_id BIGINT NOT NULL, applicant_id BIGINT NOT NULL,
   purpose VARCHAR(255), start_time DATETIME NOT NULL, end_time DATETIME NOT NULL,
   people_num INT, status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
-  approver_id BIGINT, reject_reason VARCHAR(255), created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  approver_id BIGINT, second_approver_id BIGINT COMMENT '二级审批人(院长/副院长)',
+  reject_reason VARCHAR(255), created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE repair_order (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   device_id BIGINT NOT NULL, room_id BIGINT NOT NULL, reporter_id BIGINT NOT NULL,
   description VARCHAR(512) NOT NULL, status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
+  approver_id BIGINT COMMENT '一级审批人(主任)',
+  second_approver_id BIGINT COMMENT '二级审批人(院长/副院长)',
   assignee_id BIGINT, result VARCHAR(512), completed_at DATETIME
 );
 
@@ -92,3 +95,8 @@ CREATE TABLE stat_daily_repair (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   stat_date DATE NOT NULL, new_count INT DEFAULT 0, completed_count INT DEFAULT 0
 );
+
+-- 已初始化库升级（可选执行）：
+-- ALTER TABLE reservation ADD COLUMN second_approver_id BIGINT NULL COMMENT '二级审批人(院长/副院长)';
+-- ALTER TABLE repair_order ADD COLUMN approver_id BIGINT NULL COMMENT '一级审批人(主任)',
+--                         ADD COLUMN second_approver_id BIGINT NULL COMMENT '二级审批人(院长/副院长)';

@@ -20,6 +20,7 @@ public class Reservation {
     private Integer peopleNum;
     private String status;
     private Long approverId;
+    private Long secondApproverId;   // 二级审批人(院长/副院长)
     private String rejectReason;
     private LocalDateTime createdAt;
 }
