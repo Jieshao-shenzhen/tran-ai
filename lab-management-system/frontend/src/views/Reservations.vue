@@ -118,9 +118,9 @@ interface ReservationRow {
 const store = useUserStore()
 const role = computed(() => store.role)
 const isAdmin = computed(() => ['LAB_ADMIN', 'SYSTEM_ADMIN'].includes(role.value))
-const canApprove = computed(() => ['DIRECTOR', 'DEAN', 'SYSTEM_ADMIN'].includes(role.value))
+const canApprove = computed(() => ['DIRECTOR', 'DEAN', 'SYSTEM_ADMIN', 'VICE_DEAN'].includes(role.value))
 const canFirstApprove = computed(() => ['DIRECTOR', 'SYSTEM_ADMIN'].includes(role.value))
-const canSecondApprove = computed(() => ['DEAN', 'SYSTEM_ADMIN'].includes(role.value))
+const canSecondApprove = computed(() => ['DEAN', 'SYSTEM_ADMIN', 'VICE_DEAN'].includes(role.value))
 
 const formRef = ref<FormInstance>()
 const submitting = ref(false)

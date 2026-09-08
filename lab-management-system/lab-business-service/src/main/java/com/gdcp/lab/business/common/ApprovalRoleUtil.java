@@ -3,6 +3,7 @@ package com.gdcp.lab.business.common;
 public final class ApprovalRoleUtil {
     public static final String DIRECTOR = "DIRECTOR";
     public static final String DEAN = "DEAN";
+    public static final String VICE_DEAN = "VICE_DEAN";
     public static final String SYSTEM_ADMIN = "SYSTEM_ADMIN";
 
     private ApprovalRoleUtil() {}
@@ -12,6 +13,6 @@ public final class ApprovalRoleUtil {
     }
 
     public static boolean canSecondApprove(String role) {
-        return DEAN.equals(role) || SYSTEM_ADMIN.equals(role);
+        return DEAN.equals(role) || VICE_DEAN.equals(role) || SYSTEM_ADMIN.equals(role);
     }
 }
