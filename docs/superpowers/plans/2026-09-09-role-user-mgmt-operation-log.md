@@ -436,10 +436,11 @@ if (!"GET".equals(method)) {
 
 采用脚本：`lab-management-system/logs/walkthrough.ps1`（登录/me/列表/创建/删除/日志）与 `walkthrough2.ps1`（冻结→登录被拒→解冻→登录成功→清理）。全部通过，DB 日志证据完整（见任务 4 步骤 8）。
 
-- [ ] **步骤 6：提交全部变更**
+- [x] **步骤 6：提交全部变更**
 
 ```bash
 git add -A
-git commit -m "feat: 操作日志正式启用（网关记录写操作+登录日志，含IP）"
+git commit -m "feat: 操作日志正式启用（网关记录写操作+登录日志，含IP）并更新实现计划状态"
 git push
 ```
+（**已提交** `0952aa5`，已推送 `82bcab4..0952aa5 main -> main`）
