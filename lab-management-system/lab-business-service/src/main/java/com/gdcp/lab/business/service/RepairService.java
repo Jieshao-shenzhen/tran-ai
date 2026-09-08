@@ -1,6 +1,7 @@
 package com.gdcp.lab.business.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.gdcp.lab.business.common.ApprovalRoleUtil;
 import com.gdcp.lab.business.config.RabbitConfig;
 import com.gdcp.lab.business.entity.RepairOrder;
 import com.gdcp.lab.business.mapper.RepairOrderMapper;
@@ -30,14 +31,42 @@ public class RepairService {
     }
 
     public void assign(Long id, Long assigneeId) {
-        RepairOrder o = must(id, "PENDING");
+        RepairOrder o = must(id, "APPROVED");
         o.setStatus("ASSIGNED");
         o.setAssigneeId(assigneeId);
         orderMapper.updateById(o);
     }
 
-    public void reject(Long id, String reason) {
-        RepairOrder o = must(id, "PENDING");
+    public void approve(Long id, Long approverId, String approverRole) {
+        RepairOrder o = orderMapper.selectById(id);
+        if (o == null) throw new BizException("工单不存在");
+        if ("PENDING".equals(o.getStatus())) {
+            if (!ApprovalRoleUtil.canFirstApprove(approverRole)) throw new BizException("无权限审批");
+            o.setApproverId(approverId);
+            o.setStatus("DIRECTOR_APPROVED");
+            orderMapper.updateById(o);
+        } else if ("DIRECTOR_APPROVED".equals(o.getStatus())) {
+            if (!ApprovalRoleUtil.canSecondApprove(approverRole)) throw new BizException("无权限审批");
+            o.setSecondApproverId(approverId);
+            o.setStatus("APPROVED");
+            orderMapper.updateById(o);
+        } else {
+            throw new BizException("当前状态不可审批");
+        }
+    }
+
+    public void reject(Long id, Long approverId, String approverRole, String reason) {
+        RepairOrder o = orderMapper.selectById(id);
+        if (o == null) throw new BizException("工单不存在");
+        if ("PENDING".equals(o.getStatus())) {
+            if (!ApprovalRoleUtil.canFirstApprove(approverRole)) throw new BizException("无权限审批");
+            o.setApproverId(approverId);
+        } else if ("DIRECTOR_APPROVED".equals(o.getStatus())) {
+            if (!ApprovalRoleUtil.canSecondApprove(approverRole)) throw new BizException("无权限审批");
+            o.setSecondApproverId(approverId);
+        } else {
+            throw new BizException("当前状态不可审批");
+        }
         o.setStatus("REJECTED");
         o.setResult(reason);
         orderMapper.updateById(o);
