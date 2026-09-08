@@ -55,6 +55,8 @@
             <el-option value="STUDENT" label="学生" />
             <el-option value="TEACHER" label="教师" />
             <el-option value="LAB_ADMIN" label="实验室管理员" />
+            <el-option value="DIRECTOR" label="主任" />
+            <el-option value="DEAN" label="院长/副院长" />
             <el-option value="SYSTEM_ADMIN" label="系统管理员" />
           </el-select>
         </el-form-item>
@@ -92,12 +94,16 @@ const form = reactive({ username: '', realName: '', role: 'STUDENT' })
 const roleTextMap: Record<string, string> = {
   SYSTEM_ADMIN: '系统管理员',
   LAB_ADMIN: '实验室管理员',
+  DIRECTOR: '主任',
+  DEAN: '院长/副院长',
   TEACHER: '教师',
   STUDENT: '学生'
 }
 const roleTagMap: Record<string, 'primary' | 'success' | 'warning' | 'info' | 'danger'> = {
   SYSTEM_ADMIN: 'danger',
   LAB_ADMIN: 'warning',
+  DIRECTOR: 'primary',
+  DEAN: 'danger',
   TEACHER: 'primary',
   STUDENT: 'success'
 }

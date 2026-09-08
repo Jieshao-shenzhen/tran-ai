@@ -8,6 +8,7 @@ export const rejectReservation = (id: number, reason: string) =>
 export const cancelReservation = (id: number) => request.delete(`/reservations/${id}`)
 export const listRepairs = (params?: any) => request.get('/repairs', { params })
 export const createRepair = (data: any) => request.post('/repairs', data)
+export const approveRepair = (id: number) => request.post(`/repairs/${id}/approve`)
 export const assignRepair = (id: number, assigneeId: number) =>
   request.post(`/repairs/${id}/assign`, null, { params: { assigneeId } })
 export const rejectRepair = (id: number, reason: string) =>
