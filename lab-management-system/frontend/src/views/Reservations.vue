@@ -34,7 +34,7 @@
 
     <el-card>
       <template #header><span>预约列表</span></template>
-      <el-tabs v-if="isAdmin" v-model="activeTab" class="mb-12">
+      <el-tabs v-if="isAdmin || canApprove" v-model="activeTab" class="mb-12">
         <el-tab-pane label="我的预约" name="mine" />
         <el-tab-pane label="审批中心" name="approval" />
       </el-tabs>
@@ -68,7 +68,7 @@
               plain
               @click="handleCancel(row)"
             >取消</el-button>
-            <template v-if="isAdmin && activeTab === 'approval'">
+            <template v-if="canApproveRow(row)">
               <el-button size="small" type="success" @click="handleApprove(row)">通过</el-button>
               <el-button size="small" type="danger" plain @click="handleReject(row)">驳回</el-button>
             </template>
@@ -116,7 +116,11 @@ interface ReservationRow {
 }
 
 const store = useUserStore()
-const isAdmin = computed(() => ['LAB_ADMIN', 'SYSTEM_ADMIN'].includes(store.role))
+const role = computed(() => store.role)
+const isAdmin = computed(() => ['LAB_ADMIN', 'SYSTEM_ADMIN'].includes(role.value))
+const canApprove = computed(() => ['DIRECTOR', 'DEAN', 'SYSTEM_ADMIN'].includes(role.value))
+const canFirstApprove = computed(() => ['DIRECTOR', 'SYSTEM_ADMIN'].includes(role.value))
+const canSecondApprove = computed(() => ['DEAN', 'SYSTEM_ADMIN'].includes(role.value))
 
 const formRef = ref<FormInstance>()
 const submitting = ref(false)
@@ -141,8 +145,8 @@ const rules: FormRules = {
 }
 
 const rows = computed(() => {
-  if (!isAdmin.value || activeTab.value === 'mine') return myReservations.value
-  return pendingReservations.value
+  if (activeTab.value === 'approval') return pendingReservations.value
+  return myReservations.value
 })
 
 function roomName(id: number) {
@@ -156,7 +160,8 @@ function fmtTime(t?: string) {
 }
 function statusText(s: string) {
   const map: Record<string, string> = {
-    PENDING: '待审批',
+    PENDING: '待主任审批',
+    DIRECTOR_APPROVED: '待院长审批',
     APPROVED: '已通过',
     REJECTED: '已驳回',
     CANCELLED: '已取消',
@@ -167,6 +172,7 @@ function statusText(s: string) {
 function statusTag(s: string) {
   const map: Record<string, 'warning' | 'success' | 'danger' | 'info' | 'primary'> = {
     PENDING: 'warning',
+    DIRECTOR_APPROVED: 'warning',
     APPROVED: 'success',
     REJECTED: 'danger',
     CANCELLED: 'info',
@@ -175,7 +181,13 @@ function statusTag(s: string) {
   return map[s] || 'info'
 }
 function canCancel(row: ReservationRow) {
-  return !isAdmin.value && row.status === 'PENDING'
+  return !isAdmin.value && !canApprove.value && row.status === 'PENDING'
+}
+function canApproveRow(row: ReservationRow) {
+  if (!canApprove.value || activeTab.value !== 'approval') return false
+  if (row.status === 'PENDING') return canFirstApprove.value
+  if (row.status === 'DIRECTOR_APPROVED') return canSecondApprove.value
+  return false
 }
 
 async function loadRooms() {
@@ -188,15 +200,28 @@ async function loadUsers() {
 async function loadMine() {
   myReservations.value = (await listReservations({ applicantId: store.userId })) as ReservationRow[]
 }
-async function loadPending() {
-  pendingReservations.value = (await listReservations({ status: 'PENDING' })) as ReservationRow[]
+async function loadApproval() {
+  if (canFirstApprove.value && canSecondApprove.value) {
+    // SYSTEM_ADMIN：主任与院长两级待批都看
+    const [p1, p2] = await Promise.all([
+      listReservations({ status: 'PENDING' }),
+      listReservations({ status: 'DIRECTOR_APPROVED' })
+    ])
+    pendingReservations.value = [...(p1 as ReservationRow[]), ...(p2 as ReservationRow[])]
+  } else if (canFirstApprove.value) {
+    pendingReservations.value = (await listReservations({ status: 'PENDING' })) as ReservationRow[]
+  } else if (canSecondApprove.value) {
+    pendingReservations.value = (await listReservations({ status: 'DIRECTOR_APPROVED' })) as ReservationRow[]
+  } else {
+    pendingReservations.value = []
+  }
 }
 async function loadAll() {
   loading.value = true
   try {
     await Promise.all([
       loadMine(),
-      isAdmin.value ? loadPending() : Promise.resolve(),
+      (isAdmin.value || canApprove.value) ? loadApproval() : Promise.resolve(),
       loadRooms(),
       loadUsers()
     ])
@@ -206,7 +231,7 @@ async function loadAll() {
 }
 
 watch(activeTab, () => {
-  if (activeTab.value === 'approval' && !pendingReservations.value.length) loadPending()
+  if (activeTab.value === 'approval' && !pendingReservations.value.length) loadApproval()
 })
 
 async function handleCreate() {
