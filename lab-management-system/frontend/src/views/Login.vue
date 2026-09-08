@@ -68,6 +68,8 @@ async function handleLogin() {
   loading.value = true
   try {
     const { token } = await login(form.username, form.password)
+    // 先写入 token，否则 me() 的请求拦截器读不到 Authorization 头
+    localStorage.setItem('token', token)
     const info = await me()
     store.setAuth(token, info.role, info.username, info.id)
     ElMessage.success('登录成功')
