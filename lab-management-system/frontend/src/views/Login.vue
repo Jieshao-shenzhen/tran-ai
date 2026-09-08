@@ -71,7 +71,7 @@ async function handleLogin() {
     // 先写入 token，否则 me() 的请求拦截器读不到 Authorization 头
     localStorage.setItem('token', token)
     const info = await me()
-    store.setAuth(token, info.role, info.username, info.id)
+    store.setAuth(token, info.role, info.username, info.realName, info.id)
     ElMessage.success('登录成功')
     router.push('/dashboard')
   } catch (e) {

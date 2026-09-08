@@ -27,7 +27,7 @@
         </el-icon>
         <div class="header-right">
           <el-tag size="small" type="info">{{ roleText }}</el-tag>
-          <span class="username">{{ store.username }}</span>
+          <span class="username">{{ store.realName || store.username }}</span>
           <el-button size="small" @click="handleLogout">退出</el-button>
         </div>
       </el-header>
@@ -54,6 +54,9 @@ const roleText = computed(() => {
   const map: Record<string, string> = {
     SYSTEM_ADMIN: '系统管理员',
     LAB_ADMIN: '实验室管理员',
+    DIRECTOR: '主任',
+    DEAN: '院长',
+    VICE_DEAN: '副院长',
     TEACHER: '教师',
     STUDENT: '学生'
   }

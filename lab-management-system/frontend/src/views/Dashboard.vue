@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-card class="welcome mb-12">
-      <h2 class="welcome-title">欢迎，{{ store.username }}</h2>
+      <h2 class="welcome-title">欢迎，{{ store.realName || store.username }}</h2>
       <p class="welcome-sub">当前身份：{{ roleText }}，祝您工作顺利！</p>
     </el-card>
 
@@ -29,6 +29,9 @@ const roleText = computed(() => {
   const map: Record<string, string> = {
     SYSTEM_ADMIN: '系统管理员',
     LAB_ADMIN: '实验室管理员',
+    DIRECTOR: '主任',
+    DEAN: '院长',
+    VICE_DEAN: '副院长',
     TEACHER: '教师',
     STUDENT: '学生'
   }
