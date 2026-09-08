@@ -11,6 +11,7 @@
             @keyup.enter="load"
           />
           <el-button type="primary" @click="load">查询</el-button>
+          <el-button v-if="isAdmin" type="success" @click="openCreate">新增耗材</el-button>
         </div>
       </template>
       <el-table :data="materials" v-loading="loading" border stripe :row-class-name="rowClassName">
@@ -27,10 +28,11 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column v-if="isAdmin" label="操作" width="160" fixed="right">
+        <el-table-column v-if="isAdmin" label="操作" width="220" fixed="right">
           <template #default="{ row }">
-            <el-button size="small" type="success" plain @click="openStock(row, 'IN')">入库</el-button>
+            <el-button size="small" type="primary" plain @click="openStock(row, 'IN')">入库</el-button>
             <el-button size="small" type="warning" plain @click="openStock(row, 'OUT')">出库</el-button>
+            <el-button size="small" type="danger" plain @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -56,14 +58,41 @@
         <el-button type="primary" :loading="stocking" @click="handleStock">确定</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="createVisible" title="新增耗材" width="460px">
+      <el-form :model="createForm" label-width="80px">
+        <el-form-item label="编码" required>
+          <el-input v-model="createForm.code" placeholder="唯一编码，如 M001" />
+        </el-form-item>
+        <el-form-item label="名称" required>
+          <el-input v-model="createForm.name" placeholder="耗材名称" />
+        </el-form-item>
+        <el-form-item label="规格">
+          <el-input v-model="createForm.spec" placeholder="如 500g/瓶" />
+        </el-form-item>
+        <el-form-item label="单位">
+          <el-input v-model="createForm.unit" placeholder="如 瓶/盒/个" />
+        </el-form-item>
+        <el-form-item label="初始库存">
+          <el-input-number v-model="createForm.stock" :min="0" :max="1000000" style="width: 100%" />
+        </el-form-item>
+        <el-form-item label="预警阈值">
+          <el-input-number v-model="createForm.warnThreshold" :min="0" :max="1000000" style="width: 100%" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="createVisible = false">取消</el-button>
+        <el-button type="primary" :loading="creating" @click="handleCreate">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '../store/user'
-import { listMaterials, stockMaterial } from '../api/resource'
+import { listMaterials, stockMaterial, createMaterial, deleteMaterial } from '../api/resource'
 
 interface Material {
   id: number
@@ -86,6 +115,18 @@ const dialogVisible = ref(false)
 const current = ref<Material | null>(null)
 const stockType = ref<'IN' | 'OUT'>('IN')
 const stockQuantity = ref(1)
+
+// 新增耗材
+const createVisible = ref(false)
+const creating = ref(false)
+const createForm = ref({
+  code: '',
+  name: '',
+  spec: '',
+  unit: '',
+  stock: 0,
+  warnThreshold: 0
+})
 
 const stockTitle = computed(() =>
   current.value ? `${stockType.value === 'IN' ? '入库' : '出库'} - ${current.value.name}` : ''
@@ -124,6 +165,38 @@ async function handleStock() {
   } finally {
     stocking.value = false
   }
+}
+
+function openCreate() {
+  createForm.value = { code: '', name: '', spec: '', unit: '', stock: 0, warnThreshold: 0 }
+  createVisible.value = true
+}
+
+async function handleCreate() {
+  if (!createForm.value.code || !createForm.value.name) {
+    ElMessage.warning('请填写编码和名称')
+    return
+  }
+  creating.value = true
+  try {
+    await createMaterial({ ...createForm.value })
+    ElMessage.success('新增成功')
+    createVisible.value = false
+    await load()
+  } finally {
+    creating.value = false
+  }
+}
+
+async function handleDelete(row: Material) {
+  try {
+    await ElMessageBox.confirm(`确定删除耗材「${row.name}」吗？已有出入库记录的耗材不可删除。`, '提示', { type: 'warning' })
+  } catch {
+    return
+  }
+  await deleteMaterial(row.id)
+  ElMessage.success('已删除')
+  await load()
 }
 
 onMounted(load)
