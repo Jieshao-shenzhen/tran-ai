@@ -30,9 +30,17 @@ public class AuthController {
     private String resolveIp(HttpServletRequest request) {
         String xff = request.getHeader("X-Forwarded-For");
         if (xff != null && !xff.isBlank()) {
-            return xff.split(",")[0].trim();
+            return normalizeLoopback(xff.split(",")[0].trim());
         }
-        return request.getRemoteAddr();
+        return normalizeLoopback(request.getRemoteAddr());
+    }
+
+    /** IPv6 回环地址统一显示为 127.0.0.1，便于阅读 */
+    private String normalizeLoopback(String ip) {
+        if (ip != null && ("::1".equals(ip) || "0:0:0:0:0:0:0:1".equals(ip))) {
+            return "127.0.0.1";
+        }
+        return ip;
     }
 
     @GetMapping("/me")
